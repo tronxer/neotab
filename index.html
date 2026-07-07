@@ -68,6 +68,10 @@
         .search-box input[type="text"]::placeholder {
             color: rgba(255, 255, 255, 0.6);
         }
+        /* Ссылка-невидимка для обхода блокировок Хрома */
+        #hiddenLink {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -78,11 +82,14 @@
         <!-- Часы -->
         <div class="clock" id="clock">00:00:00</div>
 
-        <!-- Изолированная строка поиска (без тегов form) -->
+        <!-- Поисковая строка (без тегов формы) -->
         <div class="search-box">
             <input type="text" id="searchInput" placeholder="Поиск в Google..." autofocus autocomplete="off">
         </div>
     </div>
+
+    <!-- Наша секретная ссылка-невидимка -->
+    <a id="hiddenLink" href=""></a>
 
     <script>
         // Скрипт для работы часов
@@ -96,13 +103,16 @@
         setInterval(updateClock, 1000);
         updateClock();
 
-        // Перехват нажатия Enter и жесткий редирект по прямой ссылке
+        // Перехват Enter и клик по чистой ссылке (в этой же вкладке)
         document.getElementById('searchInput').addEventListener('keydown', function(event) {
             if (event.key === 'Enter') {
                 const query = this.value.trim();
                 if (query !== "") {
-                    // Используем полный абсолютный URL, чтобы Хром не смог его подменить
-                    window.location.href = "https://google.com" + encodeURIComponent(query);
+                    const link = document.getElementById('hiddenLink');
+                    // Генерируем чистую ссылку на результаты
+                    link.href = "https://google.com" + encodeURIComponent(query);
+                    // Имитируем физический клик пользователя по ссылке
+                    link.click();
                 }
             }
         });
