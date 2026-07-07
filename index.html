@@ -514,7 +514,7 @@
             flex-shrink: 0; transition: all 0.3s;
         }
         .shorts-body .shorts-input-row button:hover { background: rgba(255,255,255,0.15); color: #fff; }
-        .shorts-body .shorts-frame { flex: 1; border-radius: 10px; overflow: hidden; background: #000; min-height: 0; position: relative; }
+        .shorts-body .shorts-frame { flex: 0 0 auto; align-self: center; width: 100%; max-width: 260px; aspect-ratio: 9/16; border-radius: 10px; overflow: hidden; background: #000; position: relative; }
         .shorts-body .shorts-frame iframe { width: 100%; height: 100%; border: none; }
         .shorts-body .shorts-frame iframe { width: 100%; height: 100%; border: none; }
         .shorts-overlay {
@@ -539,8 +539,7 @@
         .shorts-frame:hover .shorts-nav { opacity: 1; animation: none; }
         @keyframes fadeNav { 0% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; } }
         .shorts-nav svg { width: 28px; height: 28px; filter: drop-shadow(0 0 4px rgba(0,0,0,0.5)); }
-        #shortsPrev { left: 4px; }
-        .shorts-nav-next { right: 4px; }
+        #shortsNext { right: 4px; }
 
         .shorts-panel-trigger {
             position: absolute; top: 50%; right: -34px; z-index: 5;
@@ -745,8 +744,7 @@
                     <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="currentColor"/></svg>
                     <span id="shortsLikeCount"></span>
                 </div>
-                <div class="shorts-nav" id="shortsPrev"><svg viewBox="0 0 24 24"><path d="M7 6v12h2V6H7zm10 0l-6 6 6 6V6z" fill="currentColor"/></svg></div>
-                <div class="shorts-nav shorts-nav-next" id="shortsNext"><svg viewBox="0 0 24 24"><path d="M17 6v12h-2V6h2zm-10 0l6 6-6 6V6z" fill="currentColor"/></svg></div>
+                <div class="shorts-nav" id="shortsNext"><svg viewBox="0 0 24 24"><path d="M17 6v12h-2V6h2zm-10 0l6 6-6 6V6z" fill="currentColor"/></svg></div>
             </div>
         </div>
     </div>
@@ -1792,18 +1790,17 @@
         const shortsLikes = JSON.parse(localStorage.getItem('shortsLikes') || '{}');
 
         function shortsNext() { shortsIdx = (shortsIdx + 1) % shortsList.length; loadShorts(true); }
-        function shortsPrev() { shortsIdx = (shortsIdx - 1 + shortsList.length) % shortsList.length; loadShorts(true); }
 
         async function fetchShorts() {
             const key = localStorage.getItem('ytApiKey');
             if (!key) return;
             try {
-                const r = await fetch('https://www.googleapis.com/youtube/v3/videos?part=snippet&chart=mostPopular&maxResults=20&key=' + key);
+                const r = await fetch('https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoDuration=short&maxResults=20&regionCode=RU&relevanceLanguage=ru&key=' + key);
                 const d = await r.json();
                 console.log('YT API response:', d);
                 if (d.error) { console.warn('YouTube API error:', d.error); return; }
                 if (d.items && d.items.length > 0) {
-                    const ids = d.items.map(v => v.id).filter(Boolean).sort(() => Math.random() - 0.5);
+                    const ids = d.items.map(v => v.id.videoId || v.id).filter(Boolean).sort(() => Math.random() - 0.5);
                     shortsList = ['2cllnp5cE0o', ...ids];
                     localStorage.setItem('shortsCache', JSON.stringify(shortsList));
                     shortsIdx = 0;
@@ -1824,6 +1821,18 @@
                 void el.offsetWidth;
                 el.style.animation = '';
             });
+            // Получаем лайки через API
+            const key = localStorage.getItem('ytApiKey');
+            if (key) {
+                fetch('https://www.googleapis.com/youtube/v3/videos?part=statistics&id=' + id + '&key=' + key)
+                    .then(r => r.json()).then(d => {
+                        const el = document.getElementById('shortsLikeCount');
+                        if (d.items && d.items[0] && el) {
+                            const likes = parseInt(d.items[0].statistics.likeCount);
+                            if (!isNaN(likes)) el.textContent = likes >= 1000 ? (likes / 1000).toFixed(1) + 'K' : likes;
+                        }
+                    }).catch(() => {});
+            }
         }
 
         function toggleShortsMute() {
@@ -1844,8 +1853,6 @@
             document.getElementById('shortsSound').classList.toggle('muted', muted);
             const likeEl = document.getElementById('shortsLike');
             if (likeEl) likeEl.classList.toggle('liked', !!shortsLikes[shortsList[shortsIdx]]);
-            const cnt = document.getElementById('shortsLikeCount');
-            if (cnt) cnt.textContent = Object.keys(shortsLikes).length || '';
         }
 
         document.getElementById('shortsTrigger').addEventListener('click', () => {
@@ -1854,14 +1861,12 @@
         });
         document.getElementById('shortsSound').addEventListener('click', toggleShortsMute);
         document.getElementById('shortsLike').addEventListener('click', toggleShortsLike);
-        document.getElementById('shortsPrev').addEventListener('click', shortsPrev);
         document.getElementById('shortsNext').addEventListener('click', shortsNext);
 
         // Клавиши ← →
         document.addEventListener('keydown', e => {
             if (document.getElementById('shortsPanel').classList.contains('open')) {
-                if (e.key === 'ArrowRight') shortsNext();
-                if (e.key === 'ArrowLeft') shortsPrev();
+                if (e.key === 'ArrowRight' || e.key === ' ') shortsNext();
             }
         });
 
