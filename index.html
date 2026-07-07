@@ -278,6 +278,15 @@
         .gif-grid .gif-item.active {
             border-color: #fff;
         }
+        .gif-grid .gif-item.custom { position: relative; }
+        .gif-grid .gif-item.custom .del-bg {
+            position: absolute; top: 2px; right: 2px; z-index: 2;
+            width: 18px; height: 18px; border-radius: 50%;
+            background: rgba(0,0,0,0.6); border: none; color: #fff;
+            font-size: 12px; line-height: 18px; text-align: center;
+            cursor: pointer; opacity: 0; transition: opacity 0.2s;
+        }
+        .gif-grid .gif-item.custom:hover .del-bg { opacity: 1; }
         .gif-grid .gif-item img {
             width: 100%;
             height: 100%;
@@ -517,8 +526,10 @@
         }
         .shorts-body .shorts-input-row button:hover { background: rgba(255,255,255,0.15); color: #fff; }
         .shorts-body .shorts-frame { flex: 1; border-radius: 10px; overflow: hidden; background: #000; min-height: 0; position: relative; }
-        .shorts-body .shorts-frame iframe { width: 100%; height: 100%; border: none; }
-        .shorts-body .shorts-frame iframe { width: 100%; height: 100%; border: none; }
+        .shorts-body .shorts-frame iframe { width: 100%; height: 100%; border: none; pointer-events: none; }
+        .shorts-body .shorts-frame .shorts-overlay {
+            position: absolute; inset: 0; z-index: 2;
+        }
 
 
 
@@ -718,8 +729,7 @@
         <div class="shorts-body">
             <div class="shorts-frame" id="shortsFrame">
                 <iframe id="shortsPlayer" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-
-
+                <div class="shorts-overlay" id="shortsOverlay"></div>
             </div>
         </div>
     </div>
@@ -923,21 +933,60 @@
             }
         }
 
-        // Строим сетку превью
-        const grid = document.getElementById('gifGrid');
-        gifs.forEach(name => {
-            const item = document.createElement('div');
-            item.className = 'gif-item';
-            item.dataset.gif = name;
-            if (name === (localStorage.getItem('startBg') || gifFolder + 'anime.gif')) item.classList.add('active');
-            const img = document.createElement('img');
-            img.src = encodeURI(name);
-            img.loading = 'lazy';
-            img.alt = name;
-            item.appendChild(img);
-            item.addEventListener('click', () => setBg(name));
-            grid.appendChild(item);
-        });
+        // Кастомные обои (из localStorage)
+        let customGifs = JSON.parse(localStorage.getItem('customGifs') || '[]');
+
+        function buildGrid() {
+            const grid = document.getElementById('gifGrid');
+            grid.innerHTML = '';
+            // Дефолтные гифки
+            gifs.forEach(name => {
+                const item = document.createElement('div');
+                item.className = 'gif-item';
+                item.dataset.gif = name;
+                if (name === (localStorage.getItem('startBg') || gifFolder + 'anime.gif')) item.classList.add('active');
+                const img = document.createElement('img');
+                img.src = encodeURI(name);
+                img.loading = 'lazy';
+                img.alt = name;
+                item.appendChild(img);
+                item.addEventListener('click', () => setBg(name));
+                grid.appendChild(item);
+            });
+            // Кастомные обои
+            customGifs.forEach((dataUrl, i) => {
+                const item = document.createElement('div');
+                item.className = 'gif-item custom';
+                item.dataset.gif = dataUrl;
+                if (dataUrl === localStorage.getItem('startBg')) item.classList.add('active');
+                const img = document.createElement('img');
+                img.src = dataUrl;
+                img.loading = 'lazy';
+                img.alt = 'custom ' + i;
+                item.appendChild(img);
+                const del = document.createElement('button');
+                del.className = 'del-bg';
+                del.textContent = '✕';
+                del.addEventListener('click', e => { e.stopPropagation(); deleteCustomGif(i); });
+                item.appendChild(del);
+                item.addEventListener('click', () => setBg(dataUrl));
+                grid.appendChild(item);
+            });
+        }
+
+        function deleteCustomGif(i) {
+            const removed = customGifs[i];
+            customGifs.splice(i, 1);
+            localStorage.setItem('customGifs', JSON.stringify(customGifs));
+            if (localStorage.getItem('startBg') === removed) {
+                const def = gifFolder + 'anime.gif';
+                localStorage.setItem('startBg', def);
+                setBg(def);
+            }
+            buildGrid();
+        }
+
+        buildGrid();
 
         // Загрузка своей гифки с ПК
         document.getElementById('customGif').addEventListener('change', function(e) {
@@ -950,9 +999,10 @@
                     alert('Файл слишком большой (макс 5MB)');
                     return;
                 }
-                const prev = document.getElementById('customPreview');
-                document.getElementById('customPreviewImg').src = dataUrl;
-                prev.style.display = 'block';
+                // Сохраняем в кастомные
+                customGifs.push(dataUrl);
+                localStorage.setItem('customGifs', JSON.stringify(customGifs));
+                buildGrid();
                 bgEl.style.background = 'url("' + dataUrl + '") no-repeat center center/cover';
                 localStorage.setItem('startBg', dataUrl);
                 document.querySelectorAll('.gif-item').forEach(el => el.classList.remove('active'));
@@ -1786,39 +1836,39 @@
 
         function loadShorts(autoplay) {
             const id = shortsList[shortsIdx];
-            const player = document.getElementById('shortsPlayer');
-            const mute = localStorage.getItem('shortsMuted') !== 'false';
-            player.src = 'https://www.youtube.com/embed/' + id + '?autoplay=' + (autoplay ? 1 : 0) + '&mute=1&loop=1&playlist=' + id + '&controls=1&modestbranding=1&rel=0';
+            document.getElementById('shortsPlayer').src = 'https://www.youtube.com/embed/' + id + '?autoplay=' + (autoplay ? 1 : 0) + '&mute=1&loop=1&playlist=' + id + '&controls=0&modestbranding=1&rel=0';
         }
 
 
         document.getElementById('shortsTrigger').addEventListener('click', () => {
             document.getElementById('shortsPanel').classList.toggle('open');
-            if (document.getElementById('shortsPanel').classList.contains('open')) fetchShorts();
+            if (document.getElementById('shortsPanel').classList.contains('open')) { loadShorts(true); fetchShorts(); }
         });
 
+        const overlay = document.getElementById('shortsOverlay');
         // Свайп мышкой (зажать и тянуть вниз/вверх)
         let dragY = 0;
-        document.getElementById('shortsPanel').addEventListener('mousedown', e => { dragY = e.clientY; });
-        document.getElementById('shortsPanel').addEventListener('mouseup', e => {
+        overlay.addEventListener('mousedown', e => { dragY = e.clientY; });
+        overlay.addEventListener('mouseup', e => {
             const diff = e.clientY - dragY;
             if (Math.abs(diff) > 30) { if (diff > 0) shortsNext(); else shortsPrev(); }
         });
         // Тач свайп
         let touchY = 0;
-        document.getElementById('shortsPanel').addEventListener('touchstart', e => { touchY = e.touches[0].clientY; }, {passive:true});
-        document.getElementById('shortsPanel').addEventListener('touchend', e => {
+        overlay.addEventListener('touchstart', e => { touchY = e.touches[0].clientY; }, {passive:true});
+        overlay.addEventListener('touchend', e => {
             const diff = e.changedTouches[0].clientY - touchY;
             if (Math.abs(diff) > 30) { if (diff > 0) shortsNext(); else shortsPrev(); }
         });
 
         // Клавиши + колёсико мыши
         document.addEventListener('keydown', e => {
-            if (document.getElementById('shortsPanel').classList.contains('open')) {
-                if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'ArrowDown') shortsNext();
-            }
+            if (!document.getElementById('shortsPanel').classList.contains('open')) return;
+            if (['ArrowDown','ArrowUp','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();
+            if (e.key === 'ArrowDown' || e.key === ' ' || e.key === 'ArrowRight') shortsNext();
+            if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') shortsPrev();
         });
-        document.getElementById('shortsPanel').addEventListener('wheel', e => {
+        overlay.addEventListener('wheel', e => {
             e.preventDefault();
             if (e.deltaY > 0) shortsNext(); else shortsPrev();
         }, { passive: false });
