@@ -24,7 +24,7 @@
             position: absolute;
             top: -10px; left: -10px; right: -10px; bottom: -10px;
             background: url('gif/anime.gif') no-repeat center center/cover;
-            filter: blur(var(--bg-blur, 15px)) brightness(0.6);
+            filter: blur(15px) brightness(0.6);
             z-index: 1;
         }
         /* Холст для частиц */
@@ -725,11 +725,6 @@
             display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
             margin-top: 2px;
         }
-        .shorts-right-controls {
-            position: relative; display: flex; align-items: flex-end;
-            pointer-events: none; flex-shrink: 0;
-        }
-        .shorts-right-controls .shorts-sound-btn { pointer-events: auto; }
         .shorts-sound-btn {
             width: 32px; height: 32px; border-radius: 50%; border: none;
             background: rgba(0,0,0,0.35); color: #fff; cursor: pointer;
@@ -740,32 +735,24 @@
         .shorts-sound-btn:hover { background: rgba(0,0,0,0.6); }
         .shorts-sound-btn svg { width: 20px; height: 20px; fill: currentColor; }
         .shorts-vol-wrap {
-            position: absolute; bottom: 40px; right: 0; z-index: 5;
-            display: flex; flex-direction: column; align-items: center;
-            pointer-events: auto;
-            transition: max-height 0.3s, opacity 0.3s;
-            max-height: 0; opacity: 0; overflow: hidden;
+            display: flex; align-items: center; gap: 4px; pointer-events: auto;
+            transition: width 0.3s, opacity 0.3s;
+            overflow: hidden; width: 0; opacity: 0;
         }
-        .shorts-vol-wrap.open { max-height: 80px; opacity: 1; }
+        .shorts-vol-wrap.open { width: 60px; opacity: 1; }
         .shorts-vol-wrap input[type="range"] {
-            width: 4px; height: 60px; border-radius: 2px;
+            width: 50px; height: 3px; border-radius: 2px;
             background: rgba(255,255,255,0.15);
             -webkit-appearance: none; appearance: none; outline: none; cursor: pointer;
-            writing-mode: vertical-lr; direction: rtl;
-        }
-        .shorts-vol-wrap input[type="range"]::-webkit-slider-runnable-track {
-            width: 4px; height: 60px; background: rgba(255,255,255,0.15); border-radius: 2px;
+            flex-shrink: 0;
         }
         .shorts-vol-wrap input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none; appearance: none;
-            width: 12px; height: 12px; border-radius: 50%;
+            width: 10px; height: 10px; border-radius: 50%;
             background: rgba(255,255,255,0.6); border: none; cursor: pointer;
         }
-        .shorts-vol-wrap input[type="range"]::-moz-range-track {
-            width: 4px; height: 60px; background: rgba(255,255,255,0.15); border-radius: 2px;
-        }
         .shorts-vol-wrap input[type="range"]::-moz-range-thumb {
-            width: 12px; height: 12px; border-radius: 50%;
+            width: 10px; height: 10px; border-radius: 50%;
             background: rgba(255,255,255,0.6); border: none; cursor: pointer;
         }
         .shorts-progress {
@@ -895,13 +882,6 @@
                         <label id="panelToggle" style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);cursor:pointer;transition:all 0.3s;font-size:0.75rem;background:none">
                             <span id="panelIcon">🪟</span> <span id="panelLabel">Стеклянная панель</span>
                         </label>
-                    </div>
-                    <div style="margin-top:12px;text-align:center">
-                        <div style="margin-bottom:6px;font-size:0.7rem;color:rgba(255,255,255,0.4)">Размытие фона</div>
-                        <div style="display:flex;align-items:center;gap:8px;justify-content:center">
-                            <input type="range" id="bgBlur" min="0" max="40" value="15" style="width:130px;height:3px;border-radius:2px;background:rgba(255,255,255,0.12);-webkit-appearance:none;appearance:none;outline:none;cursor:pointer;accent-color:rgba(255,255,255,0.4)">
-                            <span id="bgBlurLabel" style="font-size:0.7rem;color:rgba(255,255,255,0.35);min-width:24px;text-align:center">15</span>
-                        </div>
                     </div>
                     <div style="margin-top:10px;text-align:center">
                         <div style="margin-bottom:6px;font-size:0.7rem;color:rgba(255,255,255,0.4)">Формат даты</div>
@@ -1035,7 +1015,11 @@
                             <svg viewBox="0 0 24 24"><path d="M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05c-.09.23-.14.47-.14.73v2c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L9.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm4 0v12h4V3h-4z"/></svg>
                         </button>
                     </div>
-
+                    <div class="sa-btn-group">
+                        <button class="sa-btn" id="saShare" title="Поделиться">
+                            <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>
+                        </button>
+                    </div>
                     <div class="sa-btn-group">
                         <button class="sa-btn" id="saComment" title="Комментарии">
                             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z"/><path d="M7 9h10v2H7zm0 3h7v2H7z" opacity="0.7"/></svg>
@@ -1054,14 +1038,12 @@
                         <span class="shorts-channel" id="shortsChannel">YouTube</span>
                         <span class="shorts-title" id="shortsTitle">Short</span>
                     </div>
-                    <div class="shorts-right-controls">
-                        <div class="shorts-vol-wrap" id="shortsVolWrap">
-                            <input type="range" id="shortsVolSlider" min="0" max="100" value="80">
-                        </div>
-                        <button class="shorts-sound-btn" id="shortsSoundBtn" title="Звук">
-                            <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
-                        </button>
+                    <div class="shorts-vol-wrap" id="shortsVolWrap">
+                        <input type="range" id="shortsVolSlider" min="0" max="100" value="80">
                     </div>
+                    <button class="shorts-sound-btn" id="shortsSoundBtn" title="Звук">
+                        <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+                    </button>
                 </div>
                 <div class="shorts-progress" id="shortsProgress"><div class="shorts-progress-bar" id="shortsProgressBar"></div></div>
             </div>
@@ -1115,23 +1097,6 @@
 <script>
         const daysOfWeek = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
         const months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
-
-        // Размытие фона
-        const bgEl = document.querySelector('.background');
-        let bgBlur = +(localStorage.getItem('bgBlur') || 15);
-        bgEl.style.setProperty('--bg-blur', bgBlur + 'px');
-        const bgBlurSlider = document.getElementById('bgBlur');
-        const bgBlurLabel = document.getElementById('bgBlurLabel');
-        if (bgBlurSlider) {
-            bgBlurSlider.value = bgBlur;
-            bgBlurLabel.textContent = bgBlur;
-            bgBlurSlider.addEventListener('input', () => {
-                bgBlur = +bgBlurSlider.value;
-                bgEl.style.setProperty('--bg-blur', bgBlur + 'px');
-                bgBlurLabel.textContent = bgBlur;
-                localStorage.setItem('bgBlur', bgBlur);
-            });
-        }
 
         function getGreeting(hours) {
             if (hours >= 5 && hours < 12) return 'Доброе утро';
@@ -2330,7 +2295,7 @@
             ytPlayer = new YT.Player('shortsPlayer', {
                 height: '100%', width: '100%',
                 videoId: shortsList[0],
-                playerVars: { autoplay: 0, mute: 0, controls: 0, fs: 0, modestbranding: 1, rel: 0, playsinline: 1, iv_load_policy: 3, enablejsapi: 1 },
+                playerVars: { autoplay: 0, mute: 1, controls: 0, fs: 0, modestbranding: 1, rel: 0, playsinline: 1, iv_load_policy: 3, enablejsapi: 1 },
                 events: {
                     onReady: () => {
                         ytReady = true;
@@ -2586,8 +2551,6 @@
                 localStorage.setItem('shortsCache', JSON.stringify(shortsList));
                 shortsIdx = 0;
                 if (ytReady) loadShort();
-            } else if (accessToken) {
-                if (oauthStatus) oauthStatus.textContent = 'Рекомендации не найдены. Открой YouTube и посмотри пару шортсов';
             }
         }
 
