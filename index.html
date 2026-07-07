@@ -758,6 +758,19 @@
                     <div style="margin-top:4px;font-size:0.6rem;color:rgba(255,255,255,0.2)">Бесплатно в <a href="https://console.cloud.google.com/apis/credentials" target="_blank" style="color:rgba(255,255,255,0.3)">Google Cloud Console</a></div>
                 </div>
 
+                <!-- Google OAuth -->
+                <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06);text-align:center">
+                    <div style="margin-bottom:6px;font-size:0.8rem;color:rgba(255,255,255,0.5)">👤 Вход в YouTube (для своих реков)</div>
+                    <input type="text" id="oauthClientId" placeholder="...apps.googleusercontent.com" style="width:90%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:7px 10px;color:rgba(255,255,255,0.7);font-size:0.7rem;outline:none;text-align:center">
+                    <div style="margin-top:4px;font-size:0.6rem;color:rgba(255,255,255,0.2)">Создай OAuth 2.0 Client ID в <a href="https://console.cloud.google.com/apis/credentials" target="_blank" style="color:rgba(255,255,255,0.3)">Google Cloud → APIs → Credentials</a> (Web application, добавь этот URL в Authorized JavaScript origins)</div>
+                    <button id="oauthSignIn" style="display:none;margin-top:8px;padding:8px 16px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);cursor:pointer;background:rgba(255,255,255,0.06);font-size:0.75rem">Войти через Google</button>
+                    <div id="oauthProfile" style="display:none;margin-top:8px;align-items:center;gap:8px;justify-content:center">
+                        <img id="oauthAvatar" style="width:28px;height:28px;border-radius:50%" alt="">
+                        <span id="oauthName" style="font-size:0.75rem;color:rgba(255,255,255,0.6)"></span>
+                        <button id="oauthSignOut" style="background:none;border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.4);border-radius:6px;padding:4px 10px;font-size:0.7rem;cursor:pointer">Выйти</button>
+                    </div>
+                </div>
+
                 <!-- Мои ссылки -->
                 <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06)">
                     <div style="margin-bottom:8px;font-size:0.8rem;color:rgba(255,255,255,0.5);text-align:center">Мои ссылки</div>
@@ -1881,6 +1894,97 @@
             ytKeyInput.addEventListener('input', () => localStorage.setItem('ytApiKey', ytKeyInput.value.trim()));
         }
 
+        // Google OAuth — вход в YouTube
+        let accessToken = localStorage.getItem('ytAccessToken') || null;
+        let tokenClient = null;
+        const oauthClientIdInput = document.getElementById('oauthClientId');
+        const oauthSignInBtn = document.getElementById('oauthSignIn');
+        const oauthProfile = document.getElementById('oauthProfile');
+        const oauthAvatar = document.getElementById('oauthAvatar');
+        const oauthName = document.getElementById('oauthName');
+        const oauthSignOutBtn = document.getElementById('oauthSignOut');
+
+        if (oauthClientIdInput) {
+            oauthClientIdInput.value = localStorage.getItem('oauthClientId') || '';
+            oauthClientIdInput.addEventListener('input', () => {
+                localStorage.setItem('oauthClientId', oauthClientIdInput.value.trim());
+                updateOAuthUI();
+            });
+        }
+
+        function loadGIS() {
+            if (window.google && window.google.accounts) { initOAuth(); return; }
+            const s = document.createElement('script');
+            s.src = 'https://accounts.google.com/gsi/client';
+            s.onload = initOAuth;
+            s.onerror = () => console.warn('GIS load failed');
+            document.body.appendChild(s);
+        }
+
+        function initOAuth() {
+            const cid = localStorage.getItem('oauthClientId');
+            if (!cid || !window.google) return;
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: cid,
+                scope: 'https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/userinfo.profile',
+                callback: resp => {
+                    if (resp.access_token) {
+                        accessToken = resp.access_token;
+                        localStorage.setItem('ytAccessToken', accessToken);
+                        fetchUserProfile(resp.access_token);
+                        updateOAuthUI();
+                        if (document.getElementById('shortsPanel').classList.contains('open')) fetchShorts();
+                    }
+                }
+            });
+            updateOAuthUI();
+        }
+
+        async function fetchUserProfile(token) {
+            try {
+                const r = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const d = await r.json();
+                if (d.picture) oauthAvatar.src = d.picture;
+                if (d.name) oauthName.textContent = d.name;
+                else if (d.email) oauthName.textContent = d.email;
+            } catch(e) {}
+        }
+
+        function updateOAuthUI() {
+            const cid = localStorage.getItem('oauthClientId');
+            if (!cid) { oauthSignInBtn.style.display = 'none'; oauthProfile.style.display = 'none'; return; }
+            if (accessToken) {
+                oauthSignInBtn.style.display = 'none';
+                oauthProfile.style.display = 'flex';
+                oauthSignInBtn.textContent = 'Войти через Google';
+            } else {
+                oauthSignInBtn.style.display = 'inline-block';
+                oauthProfile.style.display = 'none';
+                oauthSignInBtn.textContent = 'Войти через Google';
+            }
+        }
+
+        if (oauthSignInBtn) {
+            oauthSignInBtn.addEventListener('click', () => {
+                if (!tokenClient) { loadGIS(); setTimeout(() => tokenClient && tokenClient.requestAccessToken(), 1000); return; }
+                tokenClient.requestAccessToken();
+            });
+        }
+        if (oauthSignOutBtn) {
+            oauthSignOutBtn.addEventListener('click', () => {
+                if (accessToken && window.google) google.accounts.oauth2.revoke(accessToken, () => {});
+                accessToken = null;
+                localStorage.removeItem('ytAccessToken');
+                updateOAuthUI();
+                if (document.getElementById('shortsPanel').classList.contains('open')) fetchShorts();
+            });
+        }
+
+        // Загружаем GIS при старте, если есть Client ID
+        if (localStorage.getItem('oauthClientId')) loadGIS();
+
         // ---- YouTube Shorts (как в оригинале) ----
         let shortsIdx = 0;
         let shortsList = ['2cllnp5cE0o', 'N_fNNf8lt-M', 'dQw4w9WgXcQ', 'kJQP7kiw5Fk', 'RgKAFK5djSk'];
@@ -1983,18 +2087,57 @@
         async function fetchShorts() {
             const key = localStorage.getItem('ytApiKey');
             if (!key) return;
+            let allIds = [];
+
+            // Если есть токен — тянем подписки и ищем шортсы оттуда
+            if (accessToken) {
+                try {
+                    const subRes = await fetch('https://www.googleapis.com/youtube/v3/subscriptions?part=snippet&mine=true&maxResults=50', {
+                        headers: { 'Authorization': 'Bearer ' + accessToken }
+                    });
+                    const subData = await subRes.json();
+                    if (subData.items && subData.items.length > 0) {
+                        const chIds = subData.items.map(i => i.snippet.resourceId.channelId).filter(Boolean).sort(() => Math.random() - 0.5);
+                        const selected = chIds.slice(0, 5);
+                        const promises = selected.map(cid =>
+                            fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoDuration=short&channelId=${cid}&maxResults=5&key=${key}`)
+                                .then(r => r.json())
+                                .catch(() => ({}))
+                        );
+                        const results = await Promise.all(promises);
+                        results.forEach(d => {
+                            if (d.items) d.items.forEach(v => { if (v.id.videoId) allIds.push(v.id.videoId); });
+                        });
+                    }
+                } catch(e) { console.warn('fetchSubs fail:', e); }
+            }
+
+            // Общий поиск русских шортсов (всегда)
             try {
-                const r = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoDuration=short&maxResults=30&regionCode=RU&relevanceLanguage=ru&q=shorts&videoEmbeddable=true&key=${key}`);
+                const queries = ['shorts', 'youtube shorts', '#shorts'];
+                const q = queries[Math.floor(Math.random() * queries.length)];
+                const r = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoDuration=short&maxResults=30&regionCode=RU&relevanceLanguage=ru&q=${encodeURIComponent(q)}&videoEmbeddable=true&key=${key}`);
                 const d = await r.json();
-                if (d.error) { console.warn('YT API error:', d.error); return; }
-                if (d.items && d.items.length > 0) {
-                    const ids = d.items.map(v => v.id.videoId).filter(Boolean).sort(() => Math.random() - 0.5);
-                    shortsList = ['2cllnp5cE0o', ...ids];
-                    localStorage.setItem('shortsCache', JSON.stringify(shortsList));
-                    shortsIdx = 0;
-                    if (ytReady) loadShort();
-                }
-            } catch(e) { console.warn('fetchShorts fail:', e); }
+                if (d.items) d.items.forEach(v => { if (v.id.videoId) allIds.push(v.id.videoId); });
+            } catch(e) { console.warn('searchShorts fail:', e); }
+
+            // Если пусто — пробуем с другими запросами
+            if (allIds.length < 5) {
+                try {
+                    const r = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoDuration=short&maxResults=30&regionCode=RU&relevanceLanguage=ru&q=приколы&videoEmbeddable=true&key=${key}`);
+                    const d = await r.json();
+                    if (d.items) d.items.forEach(v => { if (v.id.videoId) allIds.push(v.id.videoId); });
+                } catch(e) {}
+            }
+
+            // Удаляем дубликаты, перемешиваем
+            allIds = [...new Set(allIds)].sort(() => Math.random() - 0.5);
+            if (allIds.length > 0) {
+                shortsList = ['2cllnp5cE0o', ...allIds];
+                localStorage.setItem('shortsCache', JSON.stringify(shortsList));
+                shortsIdx = 0;
+                if (ytReady) loadShort();
+            }
         }
 
         document.getElementById('shortsTrigger').addEventListener('click', () => {
