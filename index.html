@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Стартовая страница</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body, html {
+            height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #111;
+        }
+        /* Аниме фон с размытием */
+        .background {
+            position: absolute;
+            top: -10px; left: -10px; right: -10px; bottom: -10px;
+            background: url('anime.gif') no-repeat center center/cover;
+            filter: blur(15px) brightness(0.6);
+            z-index: 1;
+        }
+        /* Контент по центру */
+        .container {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+        }
+        /* Красивые часы */
+        .clock {
+            font-size: 5rem;
+            font-weight: 300;
+            color: #fff;
+            margin-bottom: 25px;
+            text-shadow: 0 0 20px rgba(255,255,255,0.4);
+            letter-spacing: 2px;
+        }
+        /* Поисковая строка */
+        .search-box {
+            position: relative;
+        }
+        .search-box input[type="text"] {
+            width: 100%;
+            padding: 15px 25px;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 30px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            color: #fff;
+            outline: none;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+        .search-box input[type="text"]:focus {
+            background: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 8px 32px rgba(255, 255, 255, 0.1);
+        }
+        .search-box input[type="text"]::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="background"></div>
+
+    <div class="container">
+        <!-- Часы -->
+        <div class="clock" id="clock">00:00:00</div>
+
+        <!-- Изолированная строка поиска (без тегов form) -->
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Поиск в Google..." autofocus autocomplete="off">
+        </div>
+    </div>
+
+    <script>
+        // Скрипт для работы часов
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Перехват нажатия Enter и жесткий редирект по прямой ссылке
+        document.getElementById('searchInput').addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                const query = this.value.trim();
+                if (query !== "") {
+                    // Используем полный абсолютный URL, чтобы Хром не смог его подменить
+                    window.location.href = "https://google.com" + encodeURIComponent(query);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
