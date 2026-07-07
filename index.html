@@ -533,6 +533,58 @@
 
 
 
+        /* Shorts — YouTube-style overlay */
+        #shortsPlayer { position: absolute; inset: 0; }
+        .shorts-actions {
+            position: absolute; bottom: 70px; right: 8px; z-index: 4;
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+            pointer-events: none;
+        }
+        .shorts-actions .sa-btn {
+            width: 38px; height: 38px; border-radius: 50%; border: none;
+            background: rgba(0,0,0,0.35); color: #fff; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s; pointer-events: auto;
+            backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+        }
+        .shorts-actions .sa-btn:hover { background: rgba(0,0,0,0.6); }
+        .shorts-actions .sa-btn svg { width: 20px; height: 20px; fill: currentColor; }
+        .shorts-bottom {
+            position: absolute; bottom: 0; left: 0; right: 0; z-index: 4;
+            padding: 14px 10px 10px; display: flex; align-items: flex-end; gap: 8px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.6));
+            pointer-events: none;
+        }
+        .shorts-bottom-left { flex: 1; min-width: 0; pointer-events: auto; }
+        .shorts-channel {
+            font-size: 0.75rem; color: #fff; font-weight: 600;
+            display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            cursor: pointer;
+        }
+        .shorts-channel:hover { text-decoration: underline; }
+        .shorts-title {
+            font-size: 0.62rem; color: rgba(255,255,255,0.7);
+            display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            margin-top: 2px;
+        }
+        .shorts-sound-btn {
+            width: 32px; height: 32px; border-radius: 50%; border: none;
+            background: rgba(0,0,0,0.35); color: #fff; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+            transition: background 0.2s; pointer-events: auto;
+            backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+        }
+        .shorts-sound-btn:hover { background: rgba(0,0,0,0.6); }
+        .shorts-sound-btn svg { width: 20px; height: 20px; fill: currentColor; }
+        .shorts-progress {
+            position: absolute; bottom: 0; left: 0; right: 0; z-index: 5;
+            height: 2px; background: rgba(255,255,255,0.1);
+            pointer-events: none;
+        }
+        .shorts-progress-bar {
+            height: 100%; background: #fff; width: 0%;
+            transition: width 0.1s linear;
+        }
         .shorts-panel-trigger {
             position: absolute; top: 50%; right: -34px; z-index: 5;
             transform: translateY(-50%);
@@ -728,8 +780,29 @@
         </div>
         <div class="shorts-body">
             <div class="shorts-frame" id="shortsFrame">
-                <iframe id="shortsPlayer" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                <div id="shortsPlayer"></div>
                 <div class="shorts-overlay" id="shortsOverlay"></div>
+                <div class="shorts-actions">
+                    <button class="sa-btn" id="saLike" title="Нравится">
+                        <svg viewBox="0 0 24 24"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>
+                    </button>
+                    <button class="sa-btn" id="saDislike" title="Не нравится">
+                        <svg viewBox="0 0 24 24"><path d="M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05c-.09.23-.14.47-.14.73v2c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L9.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm4 0v12h4V3h-4z"/></svg>
+                    </button>
+                    <button class="sa-btn" id="saShare" title="Поделиться">
+                        <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>
+                    </button>
+                </div>
+                <div class="shorts-bottom">
+                    <div class="shorts-bottom-left">
+                        <span class="shorts-channel" id="shortsChannel">YouTube</span>
+                        <span class="shorts-title" id="shortsTitle">Short</span>
+                    </div>
+                    <button class="shorts-sound-btn" id="shortsSoundBtn" title="Звук выкл">
+                        <svg viewBox="0 0 24 24"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>
+                    </button>
+                </div>
+                <div class="shorts-progress" id="shortsProgress"><div class="shorts-progress-bar" id="shortsProgressBar"></div></div>
             </div>
         </div>
     </div>
@@ -1808,62 +1881,157 @@
             ytKeyInput.addEventListener('input', () => localStorage.setItem('ytApiKey', ytKeyInput.value.trim()));
         }
 
-        // Панель YouTube Shorts — лента (iframe)
+        // ---- YouTube Shorts (как в оригинале) ----
         let shortsIdx = 0;
         let shortsList = ['2cllnp5cE0o', 'N_fNNf8lt-M', 'dQw4w9WgXcQ', 'kJQP7kiw5Fk', 'RgKAFK5djSk'];
+        let ytPlayer = null;
+        let ytReady = false;
+        let shortsPanelOpen = false;
+        let shortsMuted = true;
+        let progTimer = null;
+        let dragStart = {};
+        let touchStart = null;
 
+        function ensurePlayer() {
+            if (ytPlayer && ytReady) return;
+            if (ytPlayer) { try { ytPlayer.destroy(); } catch(e) {} ytPlayer = null; }
+            if (window.YT && window.YT.Player) { createPlayer(); return; }
+            window.onYouTubeIframeAPIReady = createPlayer;
+            const s = document.createElement('script');
+            s.src = 'https://www.youtube.com/iframe_api';
+            document.body.appendChild(s);
+        }
 
-        function shortsNext() { shortsIdx = (shortsIdx + 1) % shortsList.length; loadShorts(true); }
-        function shortsPrev() { shortsIdx = (shortsIdx - 1 + shortsList.length) % shortsList.length; loadShorts(true); }
+        function createPlayer() {
+            if (ytPlayer) try { ytPlayer.destroy(); } catch(e) {}
+            ytPlayer = new YT.Player('shortsPlayer', {
+                height: '100%', width: '100%',
+                videoId: shortsList[0],
+                playerVars: { autoplay: 0, mute: 1, controls: 0, fs: 0, modestbranding: 1, rel: 0, playsinline: 1, iv_load_policy: 3, enablejsapi: 1 },
+                events: {
+                    onReady: () => {
+                        ytReady = true;
+                        if (shortsMuted) ytPlayer.mute();
+                        updateShortsInfo();
+                        if (shortsPanelOpen) ytPlayer.playVideo();
+                        startProg();
+                    },
+                    onStateChange: e => {
+                        if (e.data === YT.PlayerState.ENDED) shortsNext();
+                        if (e.data === YT.PlayerState.PLAYING) startProg();
+                        if (e.data === YT.PlayerState.PAUSED || e.data === YT.PlayerState.BUFFERING) stopProg();
+                    }
+                }
+            });
+        }
+
+        function togglePlay() {
+            if (!ytPlayer || !ytReady) return;
+            if (ytPlayer.getPlayerState() === YT.PlayerState.PLAYING) ytPlayer.pauseVideo();
+            else ytPlayer.playVideo();
+        }
+
+        function shortsNext() {
+            if (!ytReady) return;
+            shortsIdx = (shortsIdx + 1) % shortsList.length;
+            loadShort();
+        }
+
+        function shortsPrev() {
+            if (!ytReady) return;
+            shortsIdx = (shortsIdx - 1 + shortsList.length) % shortsList.length;
+            loadShort();
+        }
+
+        function loadShort() {
+            if (!ytPlayer || !ytReady) return;
+            ytPlayer.loadVideoById(shortsList[shortsIdx]);
+            if (shortsMuted) ytPlayer.mute();
+            document.getElementById('shortsProgressBar').style.width = '0%';
+            updateShortsInfo();
+        }
+
+        function startProg() {
+            stopProg();
+            progTimer = setInterval(() => {
+                if (!ytPlayer || !ytReady) return;
+                try {
+                    const p = ytPlayer.getCurrentTime() / ytPlayer.getDuration();
+                    document.getElementById('shortsProgressBar').style.width = (p > 0 ? p * 100 : 0) + '%';
+                } catch(e) {}
+            }, 100);
+        }
+
+        function stopProg() { if (progTimer) { clearInterval(progTimer); progTimer = null; } }
+
+        async function updateShortsInfo() {
+            document.getElementById('shortsChannel').textContent = 'YouTube';
+            document.getElementById('shortsTitle').textContent = 'Short';
+            const key = localStorage.getItem('ytApiKey');
+            if (!key) return;
+            try {
+                const r = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${shortsList[shortsIdx]}&key=${key}`);
+                const d = await r.json();
+                if (d.items && d.items[0]) {
+                    const s = d.items[0].snippet;
+                    document.getElementById('shortsChannel').textContent = s.channelTitle;
+                    document.getElementById('shortsTitle').textContent = s.title;
+                }
+            } catch(e) {}
+        }
 
         async function fetchShorts() {
             const key = localStorage.getItem('ytApiKey');
             if (!key) return;
             try {
-                const r = await fetch('https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoDuration=short&maxResults=30&regionCode=RU&relevanceLanguage=ru&q=shorts&key=' + key);
+                const r = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoDuration=short&maxResults=30&regionCode=RU&relevanceLanguage=ru&q=shorts&videoEmbeddable=true&key=${key}`);
                 const d = await r.json();
-                console.log('YT API response:', d);
-                if (d.error) { console.warn('YouTube API error:', d.error); return; }
+                if (d.error) { console.warn('YT API error:', d.error); return; }
                 if (d.items && d.items.length > 0) {
-                    const ids = d.items.map(v => v.id.videoId || v.id).filter(Boolean).sort(() => Math.random() - 0.5);
+                    const ids = d.items.map(v => v.id.videoId).filter(Boolean).sort(() => Math.random() - 0.5);
                     shortsList = ['2cllnp5cE0o', ...ids];
                     localStorage.setItem('shortsCache', JSON.stringify(shortsList));
                     shortsIdx = 0;
-                    loadShorts(true);
+                    if (ytReady) loadShort();
                 }
             } catch(e) { console.warn('fetchShorts fail:', e); }
         }
 
-        function loadShorts(autoplay) {
-            const id = shortsList[shortsIdx];
-            document.getElementById('shortsPlayer').src = 'https://www.youtube.com/embed/' + id + '?autoplay=' + (autoplay ? 1 : 0) + '&mute=1&loop=1&playlist=' + id + '&controls=0&modestbranding=1&rel=0';
-        }
-
-
         document.getElementById('shortsTrigger').addEventListener('click', () => {
-            document.getElementById('shortsPanel').classList.toggle('open');
-            if (document.getElementById('shortsPanel').classList.contains('open')) { loadShorts(true); fetchShorts(); }
+            const panel = document.getElementById('shortsPanel');
+            panel.classList.toggle('open');
+            shortsPanelOpen = panel.classList.contains('open');
+            if (shortsPanelOpen) {
+                ensurePlayer();
+                if (ytPlayer && ytReady) { ytPlayer.playVideo(); if (shortsMuted) ytPlayer.mute(); }
+                fetchShorts();
+            } else {
+                if (ytPlayer && ytReady) ytPlayer.pauseVideo();
+            }
         });
 
         const shortsOverlayEl = document.getElementById('shortsOverlay');
-        // Свайп мышкой (зажать и тянуть вниз/вверх)
-        let dragY = 0;
-        shortsOverlayEl.addEventListener('mousedown', e => { dragY = e.clientY; });
-        shortsOverlayEl.addEventListener('mouseup', e => {
-            const diff = e.clientY - dragY;
-            if (Math.abs(diff) > 30) { if (diff > 0) shortsNext(); else shortsPrev(); }
+        shortsOverlayEl.addEventListener('mousedown', e => { dragStart = { y: e.clientY, x: e.clientX }; });
+        document.addEventListener('mouseup', e => {
+            if (!shortsPanelOpen || dragStart.y === undefined) return;
+            const dy = e.clientY - dragStart.y;
+            const dx = e.clientX - dragStart.x;
+            dragStart = {};
+            if (Math.abs(dy) > 30) { if (dy > 0) shortsNext(); else shortsPrev(); }
+            else if (Math.abs(dx) < 8 && Math.abs(dy) < 8) togglePlay();
         });
-        // Тач свайп
-        let touchY = 0;
-        shortsOverlayEl.addEventListener('touchstart', e => { touchY = e.touches[0].clientY; }, {passive:true});
+        shortsOverlayEl.addEventListener('touchstart', e => { touchStart = { y: e.touches[0].clientY, x: e.touches[0].clientX }; }, { passive: true });
         shortsOverlayEl.addEventListener('touchend', e => {
-            const diff = e.changedTouches[0].clientY - touchY;
-            if (Math.abs(diff) > 30) { if (diff > 0) shortsNext(); else shortsPrev(); }
+            if (!touchStart) return;
+            const dy = e.changedTouches[0].clientY - touchStart.y;
+            const dx = e.changedTouches[0].clientX - touchStart.x;
+            touchStart = null;
+            if (Math.abs(dy) > 30) { if (dy > 0) shortsNext(); else shortsPrev(); }
+            else if (Math.abs(dx) < 8 && Math.abs(dy) < 8) togglePlay();
         });
 
-        // Клавиши + колёсико мыши
         document.addEventListener('keydown', e => {
-            if (!document.getElementById('shortsPanel').classList.contains('open')) return;
+            if (!shortsPanelOpen) return;
             if (['ArrowDown','ArrowUp','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();
             if (e.key === 'ArrowDown' || e.key === ' ' || e.key === 'ArrowRight') shortsNext();
             if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') shortsPrev();
@@ -1873,11 +2041,31 @@
             if (e.deltaY > 0) shortsNext(); else shortsPrev();
         }, { passive: false });
 
-        // Восстанавливаем кеш
+        document.getElementById('shortsSoundBtn').addEventListener('click', e => {
+            e.stopPropagation();
+            if (!ytPlayer || !ytReady) return;
+            shortsMuted = !shortsMuted;
+            if (shortsMuted) ytPlayer.mute(); else ytPlayer.unMute();
+            updateSoundBtnUI();
+        });
+
+        document.querySelector('.shorts-channel').addEventListener('click', () => {
+            if (!shortsPanelOpen) return;
+            window.open('https://youtube.com/watch?v=' + shortsList[shortsIdx], '_blank');
+        });
+
+        function updateSoundBtnUI() {
+            const btn = document.getElementById('shortsSoundBtn');
+            btn.innerHTML = shortsMuted
+                ? '<svg viewBox="0 0 24 24"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>'
+                : '<svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>';
+            btn.title = shortsMuted ? 'Звук выкл' : 'Звук вкл';
+        }
+        updateSoundBtnUI();
+
         const cached = localStorage.getItem('shortsCache');
         if (cached) { try { shortsList = JSON.parse(cached); } catch {} }
         if (!shortsList.includes('2cllnp5cE0o')) shortsList.unshift('2cllnp5cE0o');
-        loadShorts(false);
 
         // Панель заметок — выезд
         if (localStorage.getItem('notesPanelOpen') === 'true') {
