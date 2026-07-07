@@ -1,12 +1,23 @@
-![anime.gif](gif/anime.gif)
+# neotab
 
-Настраиваемая стартовая страница для новой вкладки: анимированный фон GIF, виджет погоды
-ссылки для быстрого доступа, заметки, музыкальный плеер
-эффекты частиц и панель настроек
-Всё реализовано в одном HTML-файле с дизайном в стиле «стекломорфизм»
-Юзать можно через этот плагин https://chromewebstore.google.com/detail/custom-new-tab-url/mmjbdbjnoablegbkcklggeknkfcjkjia
-просто вставьте ссылку: https://tronxer.github.io/neotab/
+![Preview](gif/anime.gif)
 
-Customizable new tab start page with anime GIF background, weather widget, quick-access links, notes, music player
-particle effects, and settings panel
-Everything in a single HTML file with glassmorphism design
+> Кастомизируемая стартовая страница для новой вкладки браузера.
+
+Юзать можно через этот плагин:
+[Custom New Tab URL](https://chromewebstore.google.com/detail/custom-new-tab-url/mmjbdbjnoablegbkcklggeknkfcjkjia)
+
+Вставьте ссылку как стартовую страницу в настройках плагина:
+[https://tronxer.github.io/neotab/](https://tronxer.github.io/neotab/)
+
+## Возможности
+
+- Аниме GIF-фон (сетка превью + своя загрузка)
+- Погода (wttr.in) + прогноз на 2 дня
+- Поиск Google
+- Иконки быстрого доступа с favicon
+- Заметки с drag-n-drop и курсами валют
+- Музыкальный плеер (Web Audio API lofi + загрузка своих треков)
+- Эффекты частиц (сакура, дождь, снег, огонь, неон, пепел)
+- Настройки сохраняются в localStorage
+- Стеклянный дизайн (glassmorphism)
