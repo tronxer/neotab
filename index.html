@@ -1789,6 +1789,7 @@
             if (text.includes('333')) easterEgg('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTt6POGYUorrLfX6x9suR7rIR_UTos7zI6bBFiAH_I35GQD-NGAoF8XxNHz&s=10');
             if (text.includes('1488')) easterEgg('https://s1.15min.lt/static/cache/OTcweDU4MCwzNzR4MTIyLDU5NzI2MSxvcmlnaW5hbCwsaWQ9MTI3MDE2JmRhdGU9MjAwOSUyRjExJTJGMjEsMjAzMDU4MjU2Mw==/1258839524adolfashitleris.jpg');
             if (text.includes('67')) easterEgg('https://i.ytimg.com/vi/N_fNNf8lt-M/maxresdefault.jpg');
+            if (text.includes('cat')) easterEgg('https://s.yimg.com/ny/api/res/1.2/0Rom4OHMmU3mIXx.YSsr2g--/YXBwaWQ9aGlnaGxhbmRlcjt3PTk2MDtoPTEwODM7Y2Y9d2VicA--/https://media.zenfs.com/en/know_your_meme_909/406969be491db90685e669f64ce62917');
         }
         if (addBtn) addBtn.addEventListener('click', addNote);
         if (noteInp) noteInp.addEventListener('keydown', e => { if (e.key === 'Enter') addNote(); });
@@ -1813,11 +1814,12 @@
             const key = localStorage.getItem('ytApiKey');
             if (!key) return;
             try {
-                const r = await fetch('https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoDuration=short&maxResults=20&order=date&regionCode=RU&key=' + key);
+                const r = await fetch('https://www.googleapis.com/youtube/v3/videos?part=snippet&chart=mostPopular&maxResults=20&key=' + key);
                 const d = await r.json();
+                console.log('YT API response:', d);
                 if (d.error) { console.warn('YouTube API error:', d.error); return; }
-                if (d.items && d.items.length > 2) {
-                    const ids = d.items.map(v => v.id.videoId).filter(Boolean).sort(() => Math.random() - 0.5);
+                if (d.items && d.items.length > 0) {
+                    const ids = d.items.map(v => v.id).filter(Boolean).sort(() => Math.random() - 0.5);
                     shortsList = ['2cllnp5cE0o', ...ids];
                     localStorage.setItem('shortsCache', JSON.stringify(shortsList));
                     shortsIdx = 0;
